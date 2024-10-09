@@ -1,0 +1,37 @@
+#pragma kernel CSMain
+// Based on comment by TudorJude: https://github.com/oculus-samples/Unity-DepthAPI/issues/16#issuecomment-1863006589
+
+StructuredBuffer<float2> RaycastRequests;
+RWStructuredBuffer<float> RaycastResults;
+
+Texture2DArray<float> _EnvironmentDepthTexture;
+
+float4x4 _EnvironmentDepthReprojectionMatrices[2];
+float4 _EnvironmentDepthZBufferParams;
+
+float SampleEnvironmentDepth(const float2 uv, const int slice)
+{
+    // const float4 reprojectedUV =
+    //   mul(_EnvironmentDepthReprojectionMatrices[slice], float4(uv.x, uv.y, 0.0, 1.0));
+    const uint3 depthtextureuv = uint3(uv.x * 2000, uv.y * 2000, 0);
+
+    // depth z buffer value
+    const float inputDepthEye = _EnvironmentDepthTexture[depthtextureuv];
+
+    const float inputDepthNdc = inputDepthEye * 2.0 - 1.0;
+    float envLinearDepth = (1.0f / (inputDepthNdc + _EnvironmentDepthZBufferParams.y)) * _EnvironmentDepthZBufferParams.x;
+    
+    return envLinearDepth;
+}
+
+// depending on the use case workgroup amount can be optimized for better performance
+[numthreads(1, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    const uint slice = 0;
+
+    float2 raycastPosition = RaycastRequests[id.x];
+    
+    float envDepth = SampleEnvironmentDepth(raycastPosition, slice);
+    RaycastResults[id.x] = envDepth;
+}

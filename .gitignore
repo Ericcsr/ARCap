@@ -1,0 +1,11 @@
+__pycache__/
+.vscode/
+DepthAPI-URP/Library/
+DepthAPI-URP/Temp/
+DepthAPI-URP/Logs/
+DepthAPI-URP/DepthAPI-URP_BurstDebugInformation_DoNotShip/
+data_processing/data/
+data_processing/dexcap_data/
+data_processing/data_processed/
+data_processing/trajs/
+**/__pycache__/
