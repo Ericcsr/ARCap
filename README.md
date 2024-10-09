@@ -27,16 +27,16 @@ pip install -r requirements.txt
 4. Connect D435 camera to computer using Type-C cable.
 
 ### Install data collection APP on Quest 3
+#### Install pre-built binary
+1. Install Meta Quest Developer Hub [link](https://developers.meta.com/horizon/documentation/unity/ts-odh-getting-started) in your PC
+2. Connect Quest 3 headset to your PC, open Meta Quest Developer Hub, device should be shown in MQDH. If not put on Quest 3, enable developer mode and enable usb debugging.
+3. Install `arcap_release.apk` using MQDH -> Device Manager.
+#### Build from source
 1. Download Unity Hub / Editor [link](https://unity.com/download)
 2. Follow [link](https://developers.meta.com/horizon/documentation/unity/unity-before-you-begin/) to install Unity dependencies for quest development
 3. In Unity Hub, Add->Add project from disk, select: `ARCap_Unity`
 4. Open `ARCap_unity`, waiting for Unity Editor to open
-5. Configure IP address: 
-    - Select GripperSelect->coordinate in left hierarchy window, in right inspector change `Pc_ip` to ip of your computer,  `ws_ip` to ip of your computer when testing trained policy (may change later)
-    - Select GripperSelect->panda in left hierarchy window, in right inspector change `Local_ip` to ip of the headset
-    - Select HandSelect->coordinate in left hierarchy window, in right inspector change `Pc_ip` to ip of your computer,  `ws_ip` to ip of your computer when testing trained policy (may change later)
-    - Select HandSelect->panda in left hierarchy window, in right inspector change `Local_ip` to ip of the headset
-6. Deploy APP on Quest 3:
+5. Deploy APP on Quest 3:
     - Top menu bar->File->Build Settings, select Android, select Quest 3 as device, Click `Build And Run`
 
 ### Start data collection
