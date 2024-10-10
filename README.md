@@ -1,4 +1,8 @@
 # ARCap: Collecting High-quality Human Demonstrations for Robot Learning with Augmented Reality Feedback
+This is part of official implementation of ARCap: Collecting High-quality Human Demonstrations for Robot Learning with Augmented Reality Feedback, for training diffusion policy using collected dataset please checkout [link](https://github.com/j96w/DexCap/tree/arcap_policy)
+
+<img src="media/system.png" width=100%>
+
 ## Data collection
 
 ### Pre-requisite
@@ -31,6 +35,7 @@ pip install -r requirements.txt
 1. Install Meta Quest Developer Hub [link](https://developers.meta.com/horizon/documentation/unity/ts-odh-getting-started) in your PC
 2. Connect Quest 3 headset to your PC, open Meta Quest Developer Hub, device should be shown in MQDH. If not put on Quest 3, enable developer mode and enable usb debugging.
 3. Install `arcap_release.apk` using MQDH -> Device Manager.
+
 #### Build from source
 1. Download Unity Hub / Editor [link](https://unity.com/download)
 2. Follow [link](https://developers.meta.com/horizon/documentation/unity/unity-before-you-begin/) to install Unity dependencies for quest development
