@@ -1,10 +1,10 @@
-# ARCap: Collecting High-quality Human Demonstrations for Robot Learning with Augmented Reality Feedback (Part I)
+# ARCap: Collecting High-quality Human Demonstrations for Robot Learning with Augmented Reality Feedback
 ## Data collection
 
 ### Pre-requisite
-1. Operating System: Windows 10/11
+1. Operating System: Windows 10/11 (Tested)
 2. VR Headset: Meta Quest 3
-3. RGB-D Camera: Intel realsense D435 camera
+3. RGB-D Camera: Intel realsense D435 camera [Optional to try our code, required to collect data]
 
 ### Install python data collection server
 ```
@@ -44,11 +44,11 @@ pip install -r requirements.txt
 In `data_processing` folder, `mkdir data`
 1. Leap hand: in `data_processing` folder, run:
 ```
-python data_collection_server.py
+python data_collection_server.py # --no_camera if D435 is not connected
 ```
 2. Parallel jaw gripper: in `data_processing` folder, run:
 ```
-python data_collection_server.py --robot gripper --handedness left
+python data_collection_server.py --handedness left # --no_camera if D435 is not connected
 ```
 
 All collected data will be stored in `data/<yyyy-mm-dd-hh-mm-ss>`, each trajectory has its own folder named: `data/<yyyy-mm-dd-hh-mm-ss>/<yyyy-mm-dd-hh-mm-ss>`. Each frame is stored as a `.npz`

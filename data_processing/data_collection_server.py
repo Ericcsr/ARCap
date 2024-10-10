@@ -13,20 +13,19 @@ from quest_robot_module import QuestRightArmLeapModule, QuestLeftArmGripperModul
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--frequency", type=int, default=30)
-    parser.add_argument("--robot", type=str, default="hand")
     parser.add_argument("--handedness", type=str, default="right")
+    parser.add_argument("--no_camera", action="store_true", default=False)
     args = parser.parse_args()
     c = pb.connect(pb.DIRECT)
     vis_sp = []
     c_code = c_code = [[1,0,0,1], [0,1,0,1], [0,0,1,1], [1,1,0,1]]
     for i in range(4):
         vis_sp.append(create_primitive_shape(pb, 0.1, pb.GEOM_SPHERE, [0.02], color=c_code[i]))
-    camera = DepthCameraModule(is_decimate=False, visualize=False)
+    if not args.no_camera:
+        camera = DepthCameraModule(is_decimate=False, visualize=False)
     rokoko = RokokoModule(VR_HOST, HAND_INFO_PORT, ROKOKO_PORT)
-    if args.robot == "hand":
+    if args.handedness == "right":
         quest = QuestRightArmLeapModule(VR_HOST, LOCAL_HOST, POSE_CMD_PORT, IK_RESULT_PORT, vis_sp=None)
-    elif args.handedness == "right":
-        quest = QuestRightArmGripperModule(VR_HOST, LOCAL_HOST, POSE_CMD_PORT, IK_RESULT_PORT, vis_sp=vis_sp)
     else:
         quest = QuestLeftArmGripperModule(VR_HOST, LOCAL_HOST, POSE_CMD_PORT, IK_RESULT_PORT, vis_sp=vis_sp)
 
@@ -43,7 +42,8 @@ if __name__ == "__main__":
         else:
             current_ts = now
         try:
-            point_cloud = camera.receive()
+            if not args.no_camera:
+                point_cloud = camera.receive()
             left_positions, right_positions = rokoko.receive()
             rokoko.send_joint_data(np.vstack([left_positions[:5], right_positions[:5]]))
             wrist, head_pose= quest.receive()
@@ -60,6 +60,8 @@ if __name__ == "__main__":
                 arm_q, hand_q, wrist_pos, wrist_orn = quest.solve_system_world(wrist_pos, wrist_orn, hand_tip_pose)
                 action = quest.send_ik_result(arm_q, hand_q)
                 if quest.data_dir is not None:
+                    if args.no_camera:
+                        point_cloud = np.zeros((1000,3)) # dummy point cloud
                     if args.handedness == "right":
                         np.savez(f"{quest.data_dir}/right_data_{time.time()}.npz", right_wrist_pos=wrist_pos, right_wrist_orn=wrist_orn, 
                                                                                 head_pos=head_pos, head_orn=head_orn.as_quat(),
@@ -74,7 +76,8 @@ if __name__ == "__main__":
             print(e)
             pass
         except KeyboardInterrupt:
-            camera.close()
+            if not args.no_camera:
+                camera.close()
             rokoko.close()
             quest.close()
             break
