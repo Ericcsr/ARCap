@@ -1,5 +1,7 @@
 # ARCap: Collecting High-quality Human Demonstrations for Robot Learning with Augmented Reality Feedback
-This is part of official implementation of ARCap: Collecting High-quality Human Demonstrations for Robot Learning with Augmented Reality Feedback, for training diffusion policy using collected dataset please checkout [link](https://github.com/j96w/DexCap/tree/arcap_policy)
+## This is part of official implementation of ARCap: Collecting High-quality Human Demonstrations for Robot Learning with Augmented Reality Feedback
+## For training diffusion policy using collected dataset please checkout [link](https://github.com/j96w/DexCap/tree/arcap_policy)
+## For more details please check our [website](https://stanford-tml.github.io/ARCap/) and [paper](https://arxiv.org/abs/2410.08464)
 
 <img src="media/system.png" width=100%>
 
@@ -70,5 +72,17 @@ python convert_data_with_robot.py --root_path <yyyy-mm-dd-hh-mm-ss> --use_grippe
 ```
 
 All processed data will be stored in `data_processed/<yyyy-mm-dd-hh-mm-ss>`, each trajectory has its own folder, named: `data_processed/<yyyy-mm-dd-hh-mm-ss>/demo_i`. Each frame is stored as a subfolder `data_processed/<yyyy-mm-dd-hh-mm-ss>/demo_i/frame_j`, which contains joint angles of hand and arm, wrist poses and point clouds
+
+### Citation
+If you find this repository useful please cite:
+```
+@article{chen2024arcap,
+    title={ARCap: Collecting High-quality Human Demonstrations for Robot Learning with Augmented Reality Feedback},
+    author={Chen, Sirui and Wang, Chen and Nguyen, Kaden and Fei-Fei, Li and Liu, C Karen},
+    journal={arXiv preprint arXiv:2410.08464},
+    year={2024}
+}
+```
+
 
 
