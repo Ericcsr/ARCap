@@ -17,6 +17,7 @@
 cd data_processing
 ```
 #### Install python packages
+Python Version: `3.11`
 ```
 pip install -r requirements.txt
 ```
