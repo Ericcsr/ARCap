@@ -108,6 +108,9 @@ def set_system_pose(hand, arm, arm_q, hand_q):
 
 def get_rgbd_image(projectionMat, viewMat):
     img = pb.getCameraImage(IMAGE_SHAPE[0], IMAGE_SHAPE[1], viewMatrix=viewMat, projectionMatrix=projectionMat)
+    if not isinstance(img[3], np.ndarray):
+        img[3] = np.array(img[3]).reshape(IMAGE_SHAPE)
+        img[2] = np.array(img[2]).reshape(IMAGE_SHAPE[0],IMAGE_SHAPE[1],3)
     depth_image = NEAR * FAR /(FAR - (FAR - NEAR)*img[3])
     rgb_image = np.asarray(img[2])[:,:,:3]
     depth_image = (depth_image * 1000).astype(np.uint16)
@@ -218,6 +221,9 @@ quest_R = Rotation.from_quat(quest_tf["rel_rot"])
 quest_t = quest_tf["rel_pos"]
 delta_orn = quest_R.inv() * depth_R
 delta_pos = quest_R.inv().apply(depth_t - quest_t)
+
+if os.path.isdir("data_processed"):
+    os.mkdir("data_processed")
 
 # Create virtual robot and arm sample point cloud from head pose Should make leap hand black
 if not args.use_gripper:
