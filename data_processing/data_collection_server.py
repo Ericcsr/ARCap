@@ -16,6 +16,9 @@ if __name__ == "__main__":
     parser.add_argument("--handedness", type=str, default="right")
     parser.add_argument("--no_camera", action="store_true", default=False)
     args = parser.parse_args()
+    if not os.path.isdir("data")
+        os.mkdir("data")
+    
     c = pb.connect(pb.DIRECT)
     vis_sp = []
     c_code = c_code = [[1,0,0,1], [0,1,0,1], [0,0,1,1], [1,1,0,1]]
