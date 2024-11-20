@@ -108,6 +108,7 @@ def set_system_pose(hand, arm, arm_q, hand_q):
 
 def get_rgbd_image(projectionMat, viewMat):
     img = pb.getCameraImage(IMAGE_SHAPE[0], IMAGE_SHAPE[1], viewMatrix=viewMat, projectionMatrix=projectionMat)
+    breakpoint()
     depth_image = NEAR * FAR /(FAR - (FAR - NEAR)*img[3])
     rgb_image = np.asarray(img[2])[:,:,:3]
     depth_image = (depth_image * 1000).astype(np.uint16)

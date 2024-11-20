@@ -262,6 +262,6 @@
    <joint name="panda_grasptarget_hand" type="fixed">
     <parent link="panda_hand"/>
     <child link="panda_grasptarget"/>
-    <origin rpy="0 0 0" xyz="0 0.0 0.155"/>
+    <origin rpy="0 0 0" xyz="0 0.0 0.165"/>
   </joint>  
 </robot>

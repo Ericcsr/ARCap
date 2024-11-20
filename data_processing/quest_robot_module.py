@@ -260,6 +260,7 @@ class QuestLeftArmGripperModule(QuestRobotModule):
         self.prev_data_dir = self.data_dir
         self.last_arm_q = None
         self.last_hand_q = None
+        self.removed = False
         self.last_action = 1
         self.last_action_t = time.time()
     
@@ -380,6 +381,7 @@ class QuestLeftArmGripperModule(QuestRobotModule):
             if self.data_dir is not None:
                 self.prev_data_dir = self.data_dir
             self.data_dir = None
+            self.removed = False
             return None, None
         elif data_string.startswith("Remove"):
             if self.data_dir is not None and os.path.exists(self.data_dir):
@@ -388,6 +390,7 @@ class QuestLeftArmGripperModule(QuestRobotModule):
                 shutil.rmtree(self.prev_data_dir)
             self.data_dir = None
             self.prev_data_dir = None
+            self.removed = True
             return None, None
         elif data_string.find("LHand") != -1:
             data_string_ = data_string[7:].split(",")

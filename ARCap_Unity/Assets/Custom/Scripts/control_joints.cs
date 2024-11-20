@@ -77,6 +77,7 @@ public class JointController : MonoBehaviour
             image_l.color = new Color32(188, 188, 13, 200);
             current_txt = m_Text.text;
             m_Text.text = "Moving too fast!";
+            MainDataRecorderGripper.score -= 5;
         }
         else if (commands[0].Equals("Y") && data_collector && image_r.enabled)
         {
@@ -117,6 +118,7 @@ public class JointController : MonoBehaviour
             image_l.color = new Color32(188, 188, 13, 200);
             current_txt = m_Text.text;
             m_Text.text = "Moving too fast!";
+            MainDataRecorderGripper.score -= 2;
         }
         else if (commands[0].Equals("Y") && data_collector && image_r.enabled)
         {

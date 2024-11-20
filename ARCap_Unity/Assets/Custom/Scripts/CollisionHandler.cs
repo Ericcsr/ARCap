@@ -34,8 +34,9 @@ public class CollisionHandler : MonoBehaviour
             image_b.color = new Color32(12, 188, 188, 200);
             image_u.color = new Color32(12, 188, 188, 200);
             image_l.color = new Color32(12, 188, 188, 200);
-            OVRInput.SetControllerVibration(1, 1, OVRInput.Controller.LTouch);
-            OVRInput.SetControllerVibration(0, 0, OVRInput.Controller.LTouch);    
+            MainDataRecorderGripper.score -= 1;
+            OVRInput.SetControllerVibration(1, 1, OVRInput.Controller.RTouch);
+            OVRInput.SetControllerVibration(0, 0, OVRInput.Controller.RTouch);    
         }
     }
     

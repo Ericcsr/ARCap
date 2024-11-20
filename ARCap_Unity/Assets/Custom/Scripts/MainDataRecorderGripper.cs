@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 using Unity.XR.Oculus;
 using Meta.XR.Depth;
 using TMPro;
@@ -35,10 +36,10 @@ public class MainDataRecorderGripper : MonoBehaviour
     private Vector3 left_pos_offset = new Vector3(-0.1f, -0.04f, -0.07f);
     private Vector3 rgripper_pos_offset = new Vector3(0f, 0f, 0f);
     private Quaternion rgripper_rot_offset = Quaternion.Euler(0f, 0f, 0f);
+    public static Vector3 last_pos;
+    public static Quaternion last_rot;
     private GameObject robot;
     private GameObject rgripper;
-    private GameObject robot_vis;
-    private GameObject gripper_vis;
     private GameObject robot_ee;
     private string folder_path;
     private float current_time = 0.0f;
@@ -50,6 +51,7 @@ public class MainDataRecorderGripper : MonoBehaviour
     private Image image_l;
     private Image image_u;
     private Image image_b;
+    public static int score = 100;
     [System.Serializable]
     private struct RokokoHand
     {
@@ -152,7 +154,7 @@ public class MainDataRecorderGripper : MonoBehaviour
         }
         if (startRecording)
         {
-            m_TimeText.text = "Recording:" + traj_cnt;
+            m_TimeText.text = "Recording:" + traj_cnt + " score: " + score;
             // RecordData(counter++, headPose, headRot, 
             //             leftWristPos, leftWristRot,
             //             rightWristPos, rightWristRot,
@@ -273,8 +275,6 @@ public class MainDataRecorderGripper : MonoBehaviour
         robot = GameObject.Find("panda_link0_vis");
         robot_ee = GameObject.Find("panda_hand_vis");
         rgripper = GameObject.Find("gripper_base_vis");
-        robot_vis = GameObject.Find("panda_vis");
-        gripper_vis = GameObject.Find("gripper_vis");
         GameObject frame = GameObject.Find("coordinate_vis");
         m_TimeText.text = "Object found";
         frame.transform.position = CoordinateFrameGripper.last_pos;
@@ -315,6 +315,7 @@ public class MainDataRecorderGripper : MonoBehaviour
             startRecording = !startRecording;
             if (startRecording)
             {
+                score = 100;
                 deleted = false;
                 startRemoving = false;
                 var head_pose = cameraRig.centerEyeAnchor.position;
@@ -355,12 +356,13 @@ public class MainDataRecorderGripper : MonoBehaviour
         }
         if(OVRInput.GetUp(OVRInput.RawButton.A))
         {
-            robot_vis.SetActive(!robot_vis.activeSelf);
-            gripper_vis.SetActive(!gripper_vis.activeSelf);
-            image_b.enabled = !image_b.enabled;
-            image_l.enabled = !image_l.enabled;
-            image_r.enabled = !image_r.enabled;
-            image_u.enabled = !image_u.enabled;
+            // image_b.enabled = !image_b.enabled;
+            // image_l.enabled = !image_l.enabled;
+            // image_r.enabled = !image_r.enabled;
+            // image_u.enabled = !image_u.enabled;
+            last_pos = CoordinateFrameGripper.last_pos;
+            last_rot = CoordinateFrameGripper.last_rot;
+            SceneManager.LoadScene("GripperSelect");
         }
         if (!startRecording)
         {

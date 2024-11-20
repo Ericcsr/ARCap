@@ -34,6 +34,7 @@ public class CoordinateFrameGripper : MonoBehaviour
     public static Quaternion last_rot = new Quaternion(0, 0, 0, 1);
     public static string folder_path;
     public static string remote_ip;
+    public static bool isInitialized = false;
     [SerializeField]
     public string pc_ip;
     [SerializeField]
@@ -47,6 +48,17 @@ public class CoordinateFrameGripper : MonoBehaviour
     private bool data_collection_mode = true;
     void Start()
     {
+        if (!isInitialized)
+        {
+            isInitialized = true;
+        }
+        else
+        {
+            isFreezeUpdate = true;
+            current_pos = MainDataRecorderGripper.last_pos;
+            last_anchor_pos = current_pos;
+            cum_rot = MainDataRecorderGripper.last_rot;
+        }
         frame = GameObject.Find("coordinate");
         robot = GameObject.Find("panda_link0");
         robot_ee = GameObject.Find("panda_hand");
@@ -57,6 +69,10 @@ public class CoordinateFrameGripper : MonoBehaviour
         sender = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         init_text = GameObject.Find("InitialText").GetComponent<TextMeshProUGUI>();
         init_text.text = "Data collection, Y: Place robot";
+        if(isInitialized)
+        {
+            init_text.text = "Adjust robot, X: save and continue";
+        }
         pc_ip = StartScene.pc_ip;
         remote_ip = pc_ip;
         if (CoordinateFrame.isBimanual)
