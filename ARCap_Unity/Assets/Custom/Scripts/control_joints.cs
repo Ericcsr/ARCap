@@ -15,6 +15,8 @@ public class JointController : MonoBehaviour
     [SerializeField]
     public List<GameObject> joints = new List<GameObject>();
     [SerializeField]
+    public GameObject root;
+    [SerializeField]
     public List<float> targetPositions = new List<float>(); // Target position in degrees or meters depending on the joint type
     [SerializeField]
     public string local_ip;
@@ -22,11 +24,15 @@ public class JointController : MonoBehaviour
     public int client_port = 12345;
     [SerializeField]
     public bool data_collector = false;
+    [SerializeField]
+    public bool controlRoot = false;
     #endregion
     private List<ArticulationBody> articulationBodies = new List<ArticulationBody>();
     private UdpClient client;
     private IPEndPoint remoteEndPoint;
     List<float> jointCommands = new List<float>();
+    List<float> rootCommands = new List<float>();
+    List<float> rootInput = new List<float>();
     List<float> jointInput = new List<float>();
     private Image image_r;
     private Image image_l;
@@ -36,9 +42,13 @@ public class JointController : MonoBehaviour
     private string current_txt = "";
     private bool updated = false;
 
+    private Vector3 original_pos;
+    private Quaternion original_rot;
+
     void Start()
     {
-        local_ip = StartScene.local_ip;
+        //local_ip = StartScene.local_ip;
+        local_ip = CoordinateFrameG1.local_ip;
         int i = 0;
         foreach (GameObject joint in joints)
         {
@@ -49,6 +59,17 @@ public class JointController : MonoBehaviour
             jointInput.Add(targetPositions[i]);
             drive.target = Mathf.Rad2Deg * targetPositions[i++]; // Set the target position
             articulationBody.xDrive = drive;
+        }
+
+        if (controlRoot){
+            for (int j = 0; j< 6;j++){
+                rootCommands.Add(0);
+                rootInput.Add(0);
+            }
+            rootCommands.Add(1);
+            rootInput.Add(1);
+            original_pos = CoordinateFrameG1.last_pos;
+            original_rot = CoordinateFrameG1.last_rot;
         }
         // Initialize UDP related variables
         client = new UdpClient();
@@ -141,6 +162,12 @@ public class JointController : MonoBehaviour
         {
             jointCommands[i] = float.Parse(commands[i+1]);
         }
+        if (controlRoot){
+            for (int i=targetPositions.Count; i<targetPositions.Count+7; i++)
+            {
+                rootCommands[i-targetPositions.Count] = float.Parse(commands[i+1]);
+            }
+        }
         updated = true;
     }
 
@@ -154,6 +181,10 @@ public class JointController : MonoBehaviour
             for (int j = 0; j < jointCommands.Count; j++)
             {
                 jointInput[j] = jointCommands[j]; // Set the target position
+            }
+            for (int j = 0; j < rootCommands.Count; j++)
+            {
+                rootInput[j] = rootCommands[j];
             }
         }
         int i = 0;
@@ -169,6 +200,18 @@ public class JointController : MonoBehaviour
                 drive.target = jointInput[i++]; // Set the target position
             }
             articulationBody.xDrive = drive;
+        }
+
+        // New come root commands are always delta compared to origin in Isaac Gym.
+        i = 0;
+        if(controlRoot)
+        {
+            Vector3 rootPos = new Vector3(rootInput[i++], rootInput[i++], rootInput[i++]);
+            Quaternion rootRot = new Quaternion(rootInput[i++], rootInput[i++], rootInput[i++], rootInput[i++]);
+            //root.GetComponent<ArticulationBody>().TeleportRoot(rootPos, rootRot*original_rot);
+            root.transform.position = rootPos;
+            root.transform.rotation = rootRot;
+            m_Text.text = "robot pose updated!"+rootPos[0]+","+rootPos[1]+","+rootPos[2];
         }
     }
 }

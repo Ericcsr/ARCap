@@ -22,9 +22,9 @@
       "source": "registry",
       "dependencies": {
         "com.meta.xr.sdk.core": "65.0.0",
+        "com.unity.textmeshpro": "3.0.6",
         "com.unity.ai.navigation": "1.1.4",
-        "com.unity.nuget.newtonsoft-json": "3.0.2",
-        "com.unity.textmeshpro": "3.0.6"
+        "com.unity.nuget.newtonsoft-json": "3.0.2"
       },
       "url": "https://packages.unity.com"
     },
@@ -40,8 +40,8 @@
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "com.unity.textmeshpro": "3.0.6",
-        "com.unity.ugui": "1.0.0"
+        "com.unity.ugui": "1.0.0",
+        "com.unity.textmeshpro": "3.0.6"
       },
       "url": "https://packages.unity.com"
     },
@@ -50,8 +50,8 @@
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "com.unity.textmeshpro": "3.0.6",
-        "com.unity.ugui": "1.0.0"
+        "com.unity.ugui": "1.0.0",
+        "com.unity.textmeshpro": "3.0.6"
       },
       "url": "https://packages.unity.com"
     },
@@ -65,12 +65,24 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.burst": {
-      "version": "1.8.15",
-      "depth": 1,
+      "version": "1.8.17",
+      "depth": 2,
       "source": "registry",
       "dependencies": {
         "com.unity.mathematics": "1.2.1",
         "com.unity.modules.jsonserialize": "1.0.0"
+      },
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.collections": {
+      "version": "2.4.3",
+      "depth": 2,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.burst": "1.8.13",
+        "com.unity.test-framework": "1.4.3",
+        "com.unity.nuget.mono-cecil": "1.11.4",
+        "com.unity.test-framework.performance": "3.0.3"
       },
       "url": "https://packages.unity.com"
     },
@@ -82,8 +94,8 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ext.nunit": {
-      "version": "1.0.6",
-      "depth": 1,
+      "version": "2.0.3",
+      "depth": 4,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
@@ -116,6 +128,24 @@
     "com.unity.mathematics": {
       "version": "1.2.6",
       "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.ml-agents": {
+      "version": "file:C:/Users/tml_a/Projects/ml-agents/com.unity.ml-agents",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.unity.sentis": "2.1.0",
+        "com.unity.modules.imageconversion": "1.0.0",
+        "com.unity.modules.jsonserialize": "1.0.0",
+        "com.unity.modules.physics": "1.0.0"
+      }
+    },
+    "com.unity.nuget.mono-cecil": {
+      "version": "1.11.4",
+      "depth": 3,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
@@ -174,6 +204,17 @@
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
+    "com.unity.sentis": {
+      "version": "2.1.0",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.burst": "1.8.17",
+        "com.unity.collections": "2.4.3",
+        "com.unity.modules.imageconversion": "1.0.0"
+      },
+      "url": "https://packages.unity.com"
+    },
     "com.unity.shadergraph": {
       "version": "14.0.11",
       "depth": 1,
@@ -184,12 +225,22 @@
       }
     },
     "com.unity.test-framework": {
-      "version": "1.1.33",
-      "depth": 1,
+      "version": "1.4.3",
+      "depth": 3,
       "source": "registry",
       "dependencies": {
-        "com.unity.ext.nunit": "1.0.6",
+        "com.unity.ext.nunit": "2.0.3",
         "com.unity.modules.imgui": "1.0.0",
+        "com.unity.modules.jsonserialize": "1.0.0"
+      },
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.test-framework.performance": {
+      "version": "3.0.3",
+      "depth": 3,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.test-framework": "1.1.31",
         "com.unity.modules.jsonserialize": "1.0.0"
       },
       "url": "https://packages.unity.com"
@@ -227,9 +278,9 @@
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "com.unity.modules.subsystems": "1.0.0",
         "com.unity.modules.vr": "1.0.0",
         "com.unity.modules.xr": "1.0.0",
+        "com.unity.modules.subsystems": "1.0.0",
         "com.unity.xr.legacyinputhelpers": "2.1.7"
       },
       "url": "https://packages.unity.com"
@@ -242,6 +293,12 @@
         "com.unity.xr.management": "4.4.0"
       },
       "url": "https://packages.unity.com"
+    },
+    "org.mujoco": {
+      "version": "file:C:/Users/tml_a/mujoco/unity",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",

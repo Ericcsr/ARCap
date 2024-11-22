@@ -66,6 +66,19 @@ class QuestRobotModule:
         rel_pos = Rotation.from_matrix(Q @ rot_base.T@ Q.T).apply(pose[:3] - world_frame[:3]) # Apply base rotation not relative rotation...
         return rel_pos, rel_rot.as_quat()
     
+    def compute_inv_transform(self, rel_pos, rel_rot):
+        world_frame = self.world_frame.copy()
+        world_frame[:3] = np.array([world_frame[0], world_frame[2], world_frame[1]])
+        Q = np.array([[1, 0, 0],
+                    [0, 0, 1],
+                    [0, 1, 0.]])
+        rot_base = Rotation.from_quat(world_frame[3:]).as_matrix()
+        rot = Rotation.from_quat(rel_rot).as_matrix()
+        inv_rot = Rotation.from_matrix(rot_base @ Q.T @ rot @ Q)
+        inv_pos = Rotation.from_matrix(Q.T @ rot_base @ Q).apply(rel_pos)+world_frame[:3]
+        inv_pos[:] = np.array([inv_pos[0], inv_pos[2], inv_pos[1]])
+        return inv_pos, inv_rot.as_quat()
+
     def close(self):
         self.wrist_listener_s.close()
         if self.ik_result_s is not None:
@@ -630,3 +643,47 @@ class QuestBimanualModule(QuestRobotModule):
         self.last_arm_q = arm_q
         self.last_hand_q = hand_q
         return np.hstack([action, hand_q[2:]])
+    
+class QuestHumanoidModule(QuestRobotModule):
+    ISAAC_JOINT_MAP = ["left_hip_pitch_joint", "left_hip_roll_joint", "left_hip_yaw_joint", "left_knee_joint", "left_ankle_pitch_joint", "left_ankle_roll_joint",
+                       "right_hip_pitch_joint", "right_hip_roll_joint", "right_hip_yaw_joint", "right_knee_joint", "right_ankle_pitch_joint", "right_ankle_roll_joint",
+                       "waist_yaw_joint", "waist_roll_joint", "waist_pitch_joint", 
+                       "left_shoulder_pitch_joint", "left_shoulder_roll_joint", "left_shoulder_yaw_joint","left_elbow_joint", "left_wrist_roll_joint", "left_wrist_pitch_joint", "left_wrist_yaw_joint",
+                       "right_shoulder_pitch_joint", "right_shoulder_roll_joint", "right_shoulder_yaw_joint","right_elbow_joint", "right_wrist_roll_joint", "right_wrist_pitch_joint", "right_wrist_yaw_joint"]
+    ARM_REST = [0.0] * 29
+    ROT_OFFSET = Rotation.from_euler("xyz", [0, 0, -np.pi/2])
+    def __init__(self, vr_ip, local_ip, pose_cmd_port, ik_result_port, vis_sp=None):
+        super().__init__(vr_ip, local_ip, pose_cmd_port, ik_result_port)
+        self.vis_sp = vis_sp
+        # Initialize robots
+        self.humanoid = pb.loadURDF("assets/g1/g1_29dof_rev_1_0.urdf", flags = pb.URDF_MERGE_FIXED_LINKS)
+        self.joint_order = [pb.getJointInfo(self.humanoid, i)[1].decode() for i in range(pb.getNumJoints(self.humanoid))]
+        self.reindex = [QuestHumanoidModule.ISAAC_JOINT_MAP.index(joint_name) for joint_name in self.joint_order]
+        self.set_joint_positions(self.humanoid, QuestHumanoidModule.ARM_REST)
+        self.is_connected = False
+
+    def receive(self):
+        data, _ = self.wrist_listener_s.recvfrom(1024)
+        data_string = data.decode()
+        if data_string.startswith("WorldFrame"):
+            self.is_connected = True
+            data_string = data_string[11:]
+            data_string = data_string.split(",")
+            data_list = [float(data) for data in data_string]
+            world_frame = np.array(data_list)
+            self.world_frame = world_frame
+
+    def send_ik_result(self, q, root_pos, root_rot):
+        """
+        q shall follow pybullet order should be converted to isaac order
+        """
+        msg = "Y"
+        self.set_joint_positions(self.humanoid, q[self.reindex])
+        pb.resetBasePositionAndOrientation(self.humanoid, root_pos, root_rot)
+        rel_pos, rel_rot = self.compute_inv_transform(root_pos,  (Rotation.from_quat(root_rot)*QuestHumanoidModule.ROT_OFFSET).as_quat())
+        # sanity check
+        for i in range(len(q)):
+            msg += f",{q[i]:.3f}"
+        msg += f",{rel_pos[0]:.3f},{rel_pos[1]:.3f},{rel_pos[2]:.3f},{rel_rot[0]:.3f},{rel_rot[1]:.3f},{rel_rot[2]:.3f},{rel_rot[3]:.3f}"
+        self.ik_result_s.sendto(msg.encode(), self.ik_result_dest)
+

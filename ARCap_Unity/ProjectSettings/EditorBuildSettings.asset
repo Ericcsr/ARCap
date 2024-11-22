@@ -17,13 +17,13 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/DepthAPISample/Scenes/HandsRemoval.unity
     guid: 3a8ceeffa66b06843b17fb9be54071b1
-  - enabled: 1
+  - enabled: 0
     path: Assets/Custom/Scenes/Start.unity
     guid: aec6daef83f5bcb49aa2c5b21b338d98
-  - enabled: 1
+  - enabled: 0
     path: Assets/Custom/Scenes/HandSelect.unity
     guid: b5dfedfcefae4764bba0798d6ca0dfd3
-  - enabled: 1
+  - enabled: 0
     path: Assets/Custom/Scenes/HandCollection.unity
     guid: a64d4b489237b5e44b7f6b8eb99a5d23
   - enabled: 0
@@ -38,15 +38,21 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/RealSenseSDK2.0/Scenes/Samples/PointCloudProcessingBlocks.unity
     guid: 9029980bf604b504c8b5473f02bd774f
-  - enabled: 1
+  - enabled: 0
     path: Assets/Custom/Scenes/GripperSelect.unity
     guid: 48860e6de4444814f9da3317660e64a2
-  - enabled: 1
+  - enabled: 0
     path: Assets/Custom/Scenes/GripperCollection.unity
     guid: d58ac786b76804b40a51df8da58113e8
-  - enabled: 1
+  - enabled: 0
     path: Assets/Custom/Scenes/BimanualCollection.unity
     guid: 1ab2ea5bd1e00f745b68f93c90cb206a
+  - enabled: 1
+    path: Assets/Custom/Scenes/HumanoidSelect.unity
+    guid: 70f99ceb1c0d66342a5b6f9cdc22dd9c
+  - enabled: 1
+    path: Assets/Custom/Scenes/HumanoidCollection.unity
+    guid: 2354f49c5fe477949ad1185cb503cfce
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: 7dc924bb27a54ae49b2b998c2868fcdc,
       type: 2}
