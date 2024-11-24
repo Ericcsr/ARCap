@@ -115,8 +115,8 @@ public class JointController : MonoBehaviour
             image_b.color = new Color32(188, 188, 13, 200);
             image_u.color = new Color32(188, 188, 13, 200);
             image_l.color = new Color32(188, 188, 13, 200);
-            current_txt = m_Text.text;
-            m_Text.text = "Moving too fast!";
+            //current_txt = m_Text.text;
+            //m_Text.text = "Moving too fast!";
         }
         else if (commands[0].Equals("Y") && data_collector && image_r.enabled)
         {

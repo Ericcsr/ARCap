@@ -92,10 +92,10 @@ public class CoordinateFrameGripper : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        cum_dist += new Vector3(0, 0.005f, 0) * OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick).y;
-        cum_dist += new Vector3(0.005f, 0, 0) * OVRInput.Get(OVRInput.Axis2D.SecondaryThumbstick).x;
-        cum_dist += new Vector3(0, 0, 0.005f) * OVRInput.Get(OVRInput.Axis2D.SecondaryThumbstick).y;
-        cum_rot *= Quaternion.Euler(0, 1.0f * OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick).x , 0);
+        cum_dist += new Vector3(0, 0.002f, 0) * OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick).y;
+        cum_dist += new Vector3(0.002f, 0, 0) * OVRInput.Get(OVRInput.Axis2D.SecondaryThumbstick).x;
+        cum_dist += new Vector3(0, 0, 0.002f) * OVRInput.Get(OVRInput.Axis2D.SecondaryThumbstick).y;
+        cum_rot *= Quaternion.Euler(0, 0.5f * OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick).x , 0);
         if(!isFreezeUpdate)
         {
             

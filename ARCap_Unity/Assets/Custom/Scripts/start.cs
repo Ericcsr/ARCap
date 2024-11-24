@@ -33,7 +33,7 @@ public class StartScene : MonoBehaviour
         init_text = GameObject.Find("StartText").GetComponent<TextMeshProUGUI>();
         GetLocalIPAddress();
         CoordinateFrame.isBimanual = false;
-        overlayKeyboard = TouchScreenKeyboard.Open("Enter IP of your PC", TouchScreenKeyboardType.Default);
+        overlayKeyboard = TouchScreenKeyboard.Open("10.5.120.14", TouchScreenKeyboardType.Default);
     }
 
     public void GetLocalIPAddress()

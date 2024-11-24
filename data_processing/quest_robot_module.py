@@ -408,7 +408,7 @@ class QuestLeftArmGripperModule(QuestRobotModule):
         hand_q_feedback = np.array([0.0, 0.0]) if action == 1 else np.array([0.04, 0.04])
         if self.data_dir is None:
             delta_result = "G"
-        elif delta_result:
+        elif left_hand_q == -1: # open
             delta_result = "Y"
         else:
             delta_result = "N"
