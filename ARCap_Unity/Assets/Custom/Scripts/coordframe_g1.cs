@@ -22,7 +22,8 @@ public class CoordinateFrameG1 : MonoBehaviour
     GameObject frame;
     GameObject robot;
     OVRCameraRig cameraRig;
-    private Vector3 hand_offset = new Vector3(0.05f, 0.1f, 0.05f);
+    private Vector3 robot_pos_offset = new Vector3(0.0f, 0.8f, 0.0f);
+    private Quaternion robot_rot_offset = Quaternion.Euler(0f, 90f, 0f);
     private Quaternion hand_rot_offset = Quaternion.Euler(0f, 0f, 180f);
     Vector3 cum_dist = new Vector3(0, 0, 0);
     public Vector3 current_pos = new Vector3(0, 0, 0);
@@ -94,8 +95,8 @@ public class CoordinateFrameG1 : MonoBehaviour
         current_pos = last_anchor_pos + cum_dist;
         frame.transform.position = current_pos;
         frame.transform.rotation = cum_rot;
-        robot.transform.position = current_pos;
-        robot.transform.rotation = cum_rot;
+        robot.transform.position = current_pos+robot_pos_offset;
+        robot.transform.rotation = cum_rot*robot_rot_offset;
         // Set Palm position to be the same as end effector of the robot
         // Should apply palm offset
         if (OVRInput.GetUp(OVRInput.RawButton.Y))

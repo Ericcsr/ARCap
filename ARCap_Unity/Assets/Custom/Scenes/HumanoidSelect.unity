@@ -10408,7 +10408,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   current_pos: {x: 0, y: 0, z: 0}
   cum_rot: {x: 0, y: 0, z: 0, w: 1}
-  pc_ip: 10.5.6.254
+  pc_ip: 10.5.6.63
   ws_ip: 10.5.114.198
   sender_port: 12346
 --- !u!1 &1084491077
