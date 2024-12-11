@@ -6,9 +6,8 @@ from scipy.spatial.transform import Rotation
 import pybullet as pb
 from rigidbodySento import create_primitive_shape
 from ip_config import *
-from rokoko_module import RokokoModule
 from realsense_module import DepthCameraModule
-from quest_robot_module import QuestRightArmLeapModule, QuestLeftArmGripperModule
+from quest_robot_module import QuestRightArmLeapModule, QuestLeftArmGripperNoRokokoModule
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -23,11 +22,11 @@ if __name__ == "__main__":
         vis_sp.append(create_primitive_shape(pb, 0.1, pb.GEOM_SPHERE, [0.02], color=c_code[i]))
     if not args.no_camera:
         camera = DepthCameraModule(is_decimate=False, visualize=False)
-    rokoko = RokokoModule(VR_HOST, HAND_INFO_PORT, ROKOKO_PORT)
+    #rokoko = RokokoModule(VR_HOST, HAND_INFO_PORT, ROKOKO_PORT)
     if args.handedness == "right":
         quest = QuestRightArmLeapModule(VR_HOST, LOCAL_HOST, POSE_CMD_PORT, IK_RESULT_PORT, vis_sp=None)
     else:
-        quest = QuestLeftArmGripperModule(VR_HOST, LOCAL_HOST, POSE_CMD_PORT, IK_RESULT_PORT, vis_sp=vis_sp)
+        quest = QuestLeftArmGripperNoRokokoModule(VR_HOST, LOCAL_HOST, POSE_CMD_PORT, IK_RESULT_PORT, vis_sp=vis_sp)
 
     start_time = time.time()
     fps_counter = 0
@@ -44,8 +43,8 @@ if __name__ == "__main__":
         try:
             if not args.no_camera:
                 point_cloud = camera.receive()
-            left_positions, right_positions = rokoko.receive()
-            rokoko.send_joint_data(np.vstack([left_positions[:5], right_positions[:5]]))
+            #left_positions, right_positions = rokoko.receive()
+            #rokoko.send_joint_data(np.vstack([left_positions[:5], right_positions[:5]]))
             wrist, head_pose= quest.receive()
             if wrist is not None:
                 wrist_orn = Rotation.from_quat(wrist[1])
@@ -55,8 +54,9 @@ if __name__ == "__main__":
                 if args.handedness == "right":
                     hand_tip_pose = wrist_orn.apply(right_positions) + wrist_pos
                 else:
-                    hand_tip_pose = wrist_orn.apply(left_positions) + wrist_pos
-                hand_tip_pose[[0,1,2,3]] = hand_tip_pose[[1,2,3,0]]
+                    hand_tip_pose = None
+                    #hand_tip_pose = wrist_orn.apply(left_positions) + wrist_pos
+                #hand_tip_pose[[0,1,2,3]] = hand_tip_pose[[1,2,3,0]]
                 arm_q, hand_q, wrist_pos, wrist_orn = quest.solve_system_world(wrist_pos, wrist_orn, hand_tip_pose)
                 action = quest.send_ik_result(arm_q, hand_q)
                 if quest.data_dir is not None:
@@ -78,7 +78,6 @@ if __name__ == "__main__":
         except KeyboardInterrupt:
             if not args.no_camera:
                 camera.close()
-            rokoko.close()
             quest.close()
             break
         else:

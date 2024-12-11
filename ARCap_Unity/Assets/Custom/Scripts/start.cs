@@ -34,6 +34,8 @@ public class StartScene : MonoBehaviour
         GetLocalIPAddress();
         CoordinateFrame.isBimanual = false;
         overlayKeyboard = TouchScreenKeyboard.Open("Enter IP of your PC", TouchScreenKeyboardType.Default);
+        init_text.text = "Gripper selected, A: save and continue";
+        isGripper = true;
     }
 
     public void GetLocalIPAddress()
@@ -55,46 +57,6 @@ public class StartScene : MonoBehaviour
         if (overlayKeyboard != null && overlayKeyboard.status == TouchScreenKeyboard.Status.Done)
         {
             pc_ip = overlayKeyboard.text;
-        }
-        if (OVRInput.GetUp(OVRInput.RawButton.Y))
-        {
-            isLeapHand = !isLeapHand;
-            if(isLeapHand)
-            {
-                init_text.text = "Leap hand selected, A: save and continue";
-                CoordinateFrame.isBimanual = false;
-            }
-            else
-            {
-                init_text.text = "X: Gripper, Y: Leap hand, B: Bimanual";
-            }
-        }
-        if (OVRInput.GetUp(OVRInput.RawButton.X))
-        {
-            isGripper = !isGripper;
-            if(isGripper)
-            {
-                init_text.text = "Gripper selected, A: save and continue";
-                CoordinateFrame.isBimanual = false;
-            }
-            else
-            {
-                init_text.text = "X: Gripper, Y: Leap hand, B: Bimanual";
-            }
-        }
-        if (OVRInput.GetUp(OVRInput.RawButton.B))
-        {
-            isBimanual = !isBimanual;
-            if(isBimanual)
-            {
-                init_text.text = "Bimanual selected, A: save and continue";
-                CoordinateFrame.isBimanual = true;
-            }
-            else
-            {
-                init_text.text = "X: Gripper, Y: Leap hand, B: Bimanual";
-                CoordinateFrame.isBimanual = false;
-            }
         }
         if (OVRInput.GetUp(OVRInput.RawButton.A))
         {

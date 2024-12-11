@@ -41,17 +41,17 @@ def load_traj(folder_name):
         else:
             hand_q = data[f"{handedness}_hand_q"]
             arm_q = data[f"{handedness}_arm_q"]
-        if initialized[0] == False:
-            pcd.points = o3d.utility.Vector3dVector(data["point_cloud"][:,:3])
-            pcd.colors = o3d.utility.Vector3dVector(data["point_cloud"][:,3:])
-            o3d_vis.add_geometry(pcd)
-            initialized[0] = True
-        else:
-            pcd.points = o3d.utility.Vector3dVector(data["point_cloud"][:,:3])
-            pcd.colors = o3d.utility.Vector3dVector(data["point_cloud"][:,3:])
-            o3d_vis.update_geometry(pcd)
-            o3d_vis.poll_events()
-            o3d_vis.update_renderer()
+        # if initialized[0] == False:
+        #     pcd.points = o3d.utility.Vector3dVector(data["point_cloud"][:,:3])
+        #     pcd.colors = o3d.utility.Vector3dVector(data["point_cloud"][:,3:])
+        #     o3d_vis.add_geometry(pcd)
+        #     initialized[0] = True
+        # else:
+        #     pcd.points = o3d.utility.Vector3dVector(data["point_cloud"][:,:3])
+        #     pcd.colors = o3d.utility.Vector3dVector(data["point_cloud"][:,3:])
+        #     o3d_vis.update_geometry(pcd)
+        #     o3d_vis.poll_events()
+        #     o3d_vis.update_renderer()
         hand_qs.append(hand_q)
         arm_qs.append(arm_q)
     return wrist_poses, wrist_orns, hand_qs, arm_qs
@@ -65,7 +65,7 @@ args = parser.parse_args()
 if args.file is None:
     files = os.listdir(f"data/{args.root}")
     files.remove("WorldFrame.npy")
-    files.remove("RobotFrame.npy")
+    #files.remove("RobotFrame.npy")
     for i,file in enumerate(files):
         wrist_poses, wrist_orns, hand_qs, arm_qs = load_traj(f"data/{args.root}/{file}")
         np.savez(f"trajs/arcap_{args.exp_name}_{i}.npz", wrist_poses=wrist_poses, wrist_orns=wrist_orns, arm_qs = arm_qs, hand_qs=hand_qs)

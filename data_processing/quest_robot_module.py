@@ -418,7 +418,206 @@ class QuestLeftArmGripperModule(QuestRobotModule):
         self.last_arm_q = left_arm_q
         self.last_hand_q = left_hand_q
         return action
+
+
+class QuestLeftArmGripperNoRokokoModule(QuestRobotModule):
+    ARM_REST = [0.,
+                -0.49826458111314524,
+                -0.01990020486871322,
+                -2.4732269941140346,
+                -0.01307073642274261,
+                2.00396583422025,
+                -0.7227]
+    JOINT_DAMPING = [1000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    LEFT_HAND_Q = [-0.04, -0.04]
+    left_hand_dest = np.array([[0.09, 0.02, -0.1], [0.09, -0.03, -0.1], [0.09, -0.08, -0.1], [0.01, 0.02, -0.14]])
+    
+    left_hand_mount_pos_offset = [0, 0, 0]
+    
+    left_hand_mount_orn_offset = Rotation.from_euler("xyz", [0., 0., 0.])
+
+    left_hand_pos_offset = np.array([0.0, 0.0, 0.0]) # -0.03 palm overlap with robot hand, but grasping is hard...
+    
+    left_hand_orn_offset = Rotation.from_euler("xyz", [0., 0., 0.])
+
+    left_palm_pos_orn_offset = np.array([0.1, 0.03, 0.04, 0.0, 0.0, -np.pi/2-np.pi/8])
+    
+    def __init__(self, vr_ip, local_ip, pose_cmd_port, ik_result_port, vis_sp=None):
+        super().__init__(vr_ip, local_ip, pose_cmd_port, ik_result_port)
+        self.vis_sp = vis_sp
+        # Initialize robots
+        self.left_arm = pb.loadURDF("assets/franka_arm/panda_gripper.urdf", basePosition=[0.0, 0.0, 0.0], baseOrientation=[0, 0, 0.7071068, 0.7071068], useFixedBase=True)
+        self.left_hand = pb.loadURDF("assets/gripper/franka_panda_tri_gripper.urdf")
+        self.set_joint_positions(self.left_arm, QuestLeftArmGripperNoRokokoModule.ARM_REST)
+        self.set_joint_positions(self.left_hand, QuestLeftArmGripperNoRokokoModule.LEFT_HAND_Q)
+        self.left_lower_limits, self.left_upper_limits, self.left_joint_ranges = self.get_joint_limits(self.left_arm)
+        self.left_hand_lower_limits, self.left_hand_upper_limits, self.left_hand_joint_ranges = [0.0, 0.0], [0.04, 0.04], [0.04, 0.04]
+        self.data_dir = None
+        self.prev_data_dir = self.data_dir
+        self.last_arm_q = None
+        self.last_hand_q = None
+        self.last_action = 1
+        self.last_action_t = time.time()
+    
+    def get_triangle_orn(self, index, middle, thumb, wrist):
+        origin = (2*thumb + middle+index)/4
+        front = (index+middle)/2
+        y = front - thumb
+        if self.vis_sp is not None:
+            pb.resetBasePositionAndOrientation(self.vis_sp[0], thumb, (0, 0, 0, 1))
+            pb.resetBasePositionAndOrientation(self.vis_sp[1], front, (0, 0, 0, 1))
+            pb.resetBasePositionAndOrientation(self.vis_sp[2], wrist, (0, 0, 0, 1))
+        x = np.cross(wrist - origin, y)
+        z = np.cross(x, y)
+        # normalize
+        x = x/np.linalg.norm(x)
+        y = y/np.linalg.norm(y)
+        z = z/np.linalg.norm(z)
+        # Should solve transformation from world frame to this
+        orn = Rotation.from_matrix(np.vstack([x, y, z]).T)
+        return orn
+
+    def solve_arm_ik(self, wrist_pos, wrist_orn, wrist_offset=None):
+        # Solve IK for the wrist position
+        if wrist_offset is not None:
+            wrist_pos_ = wrist_orn.apply(wrist_offset[:3]) + wrist_pos # In world frame
+            wrist_orn_ = wrist_orn * Rotation.from_euler("xyz", wrist_offset[3:])
+        else:
+            wrist_pos_ = wrist_pos
+            wrist_orn_ = wrist_orn
+        target_q = pb.calculateInverseKinematics(self.left_arm, 9, wrist_pos_, wrist_orn_.as_quat(), 
+                                                 lowerLimits=self.left_lower_limits, upperLimits=self.left_upper_limits, 
+                                                 jointRanges=self.left_joint_ranges, restPoses=QuestLeftArmGripperNoRokokoModule.ARM_REST,
+                                                 jointDamping=QuestLeftArmGripperNoRokokoModule.JOINT_DAMPING,
+                                                 maxNumIterations=40, residualThreshold=0.001)
+        #print(target_q[6])
+        return target_q
+    
+    def solve_fingertip_ik(self, fingertip_pos):
+        # Should return one joint angle for each finger
+        # TODO: Should check whether fingertip_pos is feasible.
+        if self.is_open:
+            return np.array([0.04, 0.04]), None
+        else:
+            return np.array([0.0, 0.0]), None
+
+    def solve_system_world(self, wrist_pos, wrist_orn, tip_poses):
+        hand_q, midpoint_pos = self.solve_fingertip_ik(tip_poses)
+        #gripper_orn = self.get_triangle_orn(tip_poses[0], tip_poses[1], tip_poses[3], (tip_poses[5]+tip_poses[6])*0.5)
+        arm_q = self.solve_arm_ik(wrist_pos, wrist_orn * QuestLeftArmGripperNoRokokoModule.left_hand_orn_offset.inv(), QuestLeftArmGripperNoRokokoModule.left_palm_pos_orn_offset)
+        #arm_q = self.solve_arm_ik(midpoint_pos, gripper_orn, QuestRightArmGripperModule.left_palm_pos_orn_offset)
+        self.set_joint_positions(self.left_arm, arm_q)
+        hand_xyz = np.asarray(pb.getLinkState(self.left_arm, 8)[0])
+        hand_orn = Rotation.from_quat(pb.getLinkState(self.left_arm, 8)[1])
+        pb.resetBasePositionAndOrientation(self.left_hand, hand_xyz + (hand_orn * QuestLeftArmGripperNoRokokoModule.left_hand_mount_orn_offset).apply(QuestLeftArmGripperNoRokokoModule.left_hand_mount_pos_offset), (hand_orn * QuestLeftArmGripperNoRokokoModule.left_hand_mount_orn_offset).as_quat())
         
+        self.set_joint_positions(self.left_hand, hand_q)
+        self.this_arm_q = arm_q
+        self.this_hand_q = hand_q
+        return arm_q, hand_q, np.asarray(pb.getLinkState(self.left_arm, 9)[0]), np.asarray(pb.getLinkState(self.left_arm, 9)[1])
+    
+    def check_delta_joints(self, this_q, prev_q, threshold=0.1):
+        if prev_q is None:
+            return True
+        delta_q = np.abs(np.array(this_q) - np.array(prev_q))
+        return np.all(delta_q < threshold)
+
+    def is_closer_than_threshold(self, hand_q, threshold=None):
+        # Check whether the distance between fingers is feasible.
+        if threshold is None:
+            threshold = self.left_hand_joint_ranges[0]+self.left_hand_joint_ranges[1]
+        distance = hand_q[0] + hand_q[1]
+        if distance > threshold:
+            return False
+        return True
+
+    def compute_action(self, this_q): # -1 is open, 1 is close
+        #closing = (np.array(this_q) - np.array(prev_q)) < -0.005
+        #opening = (np.array(this_q) - np.array(prev_q)) > 0.005
+        if time.time() - self.last_action_t < 1.5:
+            return self.last_action
+        if self.is_closer_than_threshold(this_q, 0.95*(self.left_hand_joint_ranges[0]+self.left_hand_joint_ranges[1])):
+            if self.last_action != 1:
+                self.last_action_t = time.time()
+            self.last_action = 1
+            return 1
+        else:
+            if self.last_action != -1:
+                self.last_action_t = time.time()
+            self.last_action = -1
+            return -1
+            
+    # World frame marks beginning of a program.
+    def receive(self):
+        data, _ = self.wrist_listener_s.recvfrom(1024)
+        data_string = data.decode()
+        now = datetime.datetime.now()
+        if data_string.startswith("WorldFrame"):
+            data_string = data_string[11:]
+            data_string = data_string.split(",")
+            data_list = [float(data) for data in data_string]
+            world_frame = np.array(data_list)
+            self.world_frame = world_frame
+            self.wf_receive_ts = now.strftime("%Y-%m-%d-%H-%M-%S")
+            self.set_joint_positions(self.left_arm, QuestLeftArmGripperNoRokokoModule.ARM_REST)
+            self.set_joint_positions(self.left_hand, QuestLeftArmGripperNoRokokoModule.LEFT_HAND_Q)
+            os.mkdir(f"data/{self.wf_receive_ts}")
+            np.save(f"data/{self.wf_receive_ts}/WorldFrame.npy", world_frame)
+            return None, None
+        elif data_string.startswith("Start"):
+            formatted_time = now.strftime("%Y-%m-%d-%H-%M-%S")
+            self.data_dir = f"data/{self.wf_receive_ts}/{formatted_time}"
+            os.mkdir(self.data_dir)
+            return None, None
+        elif data_string.startswith("Stop"):
+            formatted_time = now.strftime("%Y-%m-%d-%H-%M-%S")
+            if self.data_dir is not None:
+                self.prev_data_dir = self.data_dir
+            self.data_dir = None
+            return None, None
+        elif data_string.startswith("Remove"):
+            if self.data_dir is not None and os.path.exists(self.data_dir):
+                shutil.rmtree(self.data_dir)
+            elif self.prev_data_dir is not None and os.path.exists(self.prev_data_dir):
+                shutil.rmtree(self.prev_data_dir)
+            self.data_dir = None
+            self.prev_data_dir = None
+            return None, None
+        elif data_string.find("LHand") != -1:
+            data_string_ = data_string[7:].split(",")
+            data_list = [float(data) for data in data_string_]
+            wrist_tf = np.array(data_list[:7])
+            head_tf = np.array(data_list[7:14])
+            if (data_list[14] > 0.1):
+                self.is_open = True
+            else:
+                self.is_open = False
+            #print("is open:", self.is_open, data_list[14])
+            rel_wrist_pos, rel_wrist_rot = self.compute_rel_transform(wrist_tf)
+            rel_head_pos, rel_head_rot = self.compute_rel_transform(head_tf)
+            if self.data_dir is None and data_string[0] == "Y":
+                formatted_time = now.strftime("%Y-%m-%d-%H-%M-%S")
+                self.data_dir = f"data/{self.wf_receive_ts}/{formatted_time}"
+                os.mkdir(self.data_dir)
+            return (rel_wrist_pos, rel_wrist_rot), (rel_head_pos, rel_head_rot)
+        
+    def send_ik_result(self, left_arm_q, left_hand_q):
+        delta_result = self.check_delta_joints(left_arm_q, self.last_arm_q) #and self.check_delta_joints(left_hand_q, self.last_hand_q, 0.2) and self.is_closer_than_threshold(left_hand_q)
+        action = self.compute_action(left_hand_q)
+        hand_q_feedback = np.array([0.0, 0.0]) if action == 1 else np.array([0.04, 0.04])
+        if self.data_dir is None:
+            delta_result = "G"
+        elif delta_result:
+            delta_result = "Y"
+        else:
+            delta_result = "N"
+        msg = f"{delta_result},{left_arm_q[0]:.3f},{left_arm_q[1]:.3f},{left_arm_q[2]:.3f},{left_arm_q[3]:.3f},{left_arm_q[4]:.3f},{left_arm_q[5]:.3f},{left_arm_q[6]:.3f}"
+        msg += f",{hand_q_feedback[0]:.3f},{hand_q_feedback[1]:.3f}"
+        self.ik_result_s.sendto(msg.encode(), self.ik_result_dest)
+        self.last_arm_q = left_arm_q
+        self.last_hand_q = left_hand_q
+        return action
+
 class QuestBimanualModule(QuestRobotModule):
     def __init__(self, vr_ip, local_ip, pose_cmd_port, ik_result_port, vis_sp=None):
         super().__init__(vr_ip, local_ip, pose_cmd_port, ik_result_port)

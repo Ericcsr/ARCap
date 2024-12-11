@@ -32,14 +32,16 @@ public class MainDataRecorderGripper : MonoBehaviour
     private Quaternion rotateX = Quaternion.Euler(-20f, -25f,-25f); // left: positive ccw, negative cw
     private Quaternion rotateXinv = Quaternion.Euler(-30f, 25f, 25f);
     private Vector3 right_pos_offset = new Vector3(0.1f, -0.02f, -0.07f); //+/-: [down/up, right/left, front/back]
-    private Vector3 left_pos_offset = new Vector3(-0.1f, -0.04f, -0.07f);
-    private Vector3 rgripper_pos_offset = new Vector3(0f, 0f, 0f);
-    private Quaternion rgripper_rot_offset = Quaternion.Euler(0f, 0f, 0f);
+    private Vector3 left_pos_offset = new Vector3(0f,0f,0f);
+    private Vector3 lgripper_pos_offset = new Vector3(0f, 0f, 0f);
+    private Quaternion lgripper_rot_offset = Quaternion.Euler(0f, 0f, 0f);
     private GameObject robot;
     private GameObject rgripper;
     private GameObject robot_vis;
     private GameObject gripper_vis;
     private GameObject robot_ee;
+    private OVRHand l_hand;
+    private OVRSkeleton l_hand_skeleton;
     private string folder_path;
     private float current_time = 0.0f;
     // Some control flags
@@ -50,19 +52,6 @@ public class MainDataRecorderGripper : MonoBehaviour
     private Image image_l;
     private Image image_u;
     private Image image_b;
-    [System.Serializable]
-    private struct RokokoHand
-    {
-        public float[] lt;
-        public float[] li;
-        public float[] lm;
-        public float[] lr;
-        public float[] rt;
-        public float[] ri;
-        public float[] rm;
-        public float[] rr;
-    }
-    RokokoHand hand;
     #endregion
 
 
@@ -107,22 +96,18 @@ public class MainDataRecorderGripper : MonoBehaviour
     {
         // Attempt to get the global depth texture
         // This should be a image, get a image and send via redis?
-        rgripper.GetComponent<ArticulationBody>().TeleportRoot(robot_ee.transform.position + robot_ee.transform.rotation * rgripper_rot_offset * rgripper_pos_offset, robot_ee.transform.rotation * rgripper_rot_offset);
+        rgripper.GetComponent<ArticulationBody>().TeleportRoot(robot_ee.transform.position + robot_ee.transform.rotation * lgripper_rot_offset * lgripper_pos_offset, robot_ee.transform.rotation * lgripper_rot_offset);
         
             // Should use left eye anchor pose from OVRCameraRig
         var headPose = cameraRig.centerEyeAnchor.position;
         var headRot = cameraRig.centerEyeAnchor.rotation; // Should store them separately. [w,x,y,z]
         m_TimeText.enabled = true;
-        if (client.Available > 0)
-        {
-            hand = GetMessage();
-        }
         // Left controller on right hand, inversed
-        Vector3 rightWristPos = cameraRig.leftHandAnchor.position + cameraRig.leftHandAnchor.rotation * left_pos_offset;
-        Vector3 leftWristPos = cameraRig.rightHandAnchor.position + cameraRig.rightHandAnchor.rotation * right_pos_offset;
-        Quaternion rightWristRot = cameraRig.leftHandAnchor.rotation * rotateXinv * rotateZXinv;
-        Quaternion leftWristRot = cameraRig.rightHandAnchor.rotation * rotateX * rotateZX;
-        updateVisSpheres(hand, leftWristPos, leftWristRot, rightWristPos, rightWristRot);
+        Vector3 leftWristPos = cameraRig.leftHandAnchor.position + cameraRig.leftHandAnchor.rotation * left_pos_offset;
+        Vector3 rightWristPos = cameraRig.rightHandAnchor.position + cameraRig.rightHandAnchor.rotation * right_pos_offset;
+        Quaternion leftWristRot = cameraRig.leftHandAnchor.rotation; //* rotateXinv * rotateZXinv;
+        Quaternion rightWristRot = cameraRig.rightHandAnchor.rotation * rotateX * rotateZX;
+        // updateVisSpheres(hand, leftWristPos, leftWristRot, rightWristPos, rightWristRot);
         // if time gap > 0.05 send hand pose
         if (Time.time - current_time > 0.02)
         {
@@ -169,53 +154,21 @@ public class MainDataRecorderGripper : MonoBehaviour
     // record: "Y" or "N"
     private void SendHeadWristPose( string handedness, string record, Vector3 wrist_pos, Quaternion wrist_rot, Vector3 head_pos, Quaternion head_orn)
     {
+        float isPinch = checkPinch();
         string message = record + handedness+"Hand:" + wrist_pos.x + "," + wrist_pos.y + "," + wrist_pos.z + "," + wrist_rot.x + "," + wrist_rot.y + "," + wrist_rot.z + "," + wrist_rot.w;
-        message = message + "," + head_pos.x + "," + head_pos.y + "," + head_pos.z + "," + head_orn.x + "," + head_orn.y + "," + head_orn.z + "," + head_orn.w;
+        message = message + "," + head_pos.x + "," + head_pos.y + "," + head_pos.z + "," + head_orn.x + "," + head_orn.y + "," + head_orn.z + "," + head_orn.w+","+isPinch;
         byte[] data = Encoding.UTF8.GetBytes(message);
         sender.SendTo(data, data.Length, SocketFlags.None, targetEndPoint);
     }   
-    // Has to be called after updateVisSpheres
-    
-    private RokokoHand GetMessage()
-    {
-        string message = "";
-        RokokoHand rokokoHand;
-        try
-        {
-            byte[] receivedBytes = client.Receive(ref remoteEndPoint);
-            message = Encoding.UTF8.GetString(receivedBytes);
-            rokokoHand = JsonUtility.FromJson<RokokoHand>(message);
-            //m_TimeText.text = "Received: " + rokokoHand.lt[2].ToString();
-        }
-        catch (Exception e)
-        {
-            m_TimeText.text = "Socket error: " + e.Message;
-            rokokoHand = new RokokoHand();
-        }
-        return rokokoHand;
-    }
 
-    private void updateVisSpheres(RokokoHand hand, 
-                                    Vector3 leftHandPos, Quaternion leftHandRot, 
-                                    Vector3 rightHandPos, Quaternion rightHandRot)
+    private float checkPinch()
     {
-        spheres[0].transform.position = new Vector3(hand.lt[0], hand.lt[2], hand.lt[1]);
-        spheres[1].transform.position = new Vector3(hand.li[0], hand.li[2], hand.li[1]);
-        spheres[2].transform.position = new Vector3(hand.lm[0], hand.lm[2], hand.lm[1]);
-        //spheres[3].transform.position = new Vector3(hand.lr[0], hand.lr[2], hand.lr[1]);
-        spheres[3].transform.position = new Vector3(hand.rt[0], hand.rt[2], hand.rt[1]);
-        spheres[4].transform.position = new Vector3(hand.ri[0], hand.ri[2], hand.ri[1]);
-        spheres[5].transform.position = new Vector3(hand.rm[0], hand.rm[2], hand.rm[1]);
-        //spheres[7].transform.position = new Vector3(hand.rr[0], hand.rr[2], hand.rr[1]);
-        // transform each spheres to global position with left and right hand anchor
-        for (int i = 0; i < 6; i++)
-        {
-            if (i < 3) // Left controller on right hand
-                spheres[i].transform.position = leftHandPos + leftHandRot * spheres[i].transform.position;
-            else
-                spheres[i].transform.position = rightHandPos + rightHandRot * spheres[i].transform.position;
-        }
-        
+        Vector3 l_thumb_tip = l_hand_skeleton.Bones[(int)OVRSkeleton.BoneId.Hand_ThumbTip].Transform.position;
+        Vector3 l_index_tip = l_hand_skeleton.Bones[(int)OVRSkeleton.BoneId.Hand_IndexTip].Transform.position;
+        Vector3 l_middle_tip = l_hand_skeleton.Bones[(int)OVRSkeleton.BoneId.Hand_MiddleTip].Transform.position;
+        float dist1 = Vector3.Distance(l_thumb_tip, l_index_tip);
+        float dist2 = Vector3.Distance(l_thumb_tip, l_middle_tip);
+        return (dist1 + dist2)/2;
     }
 
     #endregion // Private Methods
@@ -229,6 +182,8 @@ public class MainDataRecorderGripper : MonoBehaviour
         // Load SelectWorldScene
         local_ip = StartScene.local_ip;
         cameraRig = GameObject.Find("OVRCameraRig").GetComponent<OVRCameraRig>();
+        l_hand = GetComponent<OVRHand>();
+        l_hand_skeleton = GetComponent<OVRSkeleton>();
         // Set depth map index 200 x 200, from 0 to 1 in x and y
         // for (int y = 0; y < 100; y++){
         //     for (int x = 0; x < 100; x++)
@@ -286,15 +241,15 @@ public class MainDataRecorderGripper : MonoBehaviour
         targetEndPoint = new IPEndPoint(IPAddress.Parse(CoordinateFrameGripper.remote_ip), sender_port);
         // Initialize hand 
         m_TimeText.text = "Endpoint init";
-        hand = new RokokoHand();
-        hand.lt = new float[3]{0.0f, 0.0f, 0.0f};
-        hand.li = new float[3]{0.0f, 0.0f, 0.0f};
-        hand.lm = new float[3]{0.0f, 0.0f, 0.0f};
-        hand.lr = new float[3]{0.0f, 0.0f, 0.0f};
-        hand.rt = new float[3]{0.0f, 0.0f, 0.0f};
-        hand.ri = new float[3]{0.0f, 0.0f, 0.0f};
-        hand.rm = new float[3]{0.0f, 0.0f, 0.0f};
-        hand.rr = new float[3]{0.0f, 0.0f, 0.0f};
+        // hand = new RokokoHand();
+        // hand.lt = new float[3]{0.0f, 0.0f, 0.0f};
+        // hand.li = new float[3]{0.0f, 0.0f, 0.0f};
+        // hand.lm = new float[3]{0.0f, 0.0f, 0.0f};
+        // hand.lr = new float[3]{0.0f, 0.0f, 0.0f};
+        // hand.rt = new float[3]{0.0f, 0.0f, 0.0f};
+        // hand.ri = new float[3]{0.0f, 0.0f, 0.0f};
+        // hand.rm = new float[3]{0.0f, 0.0f, 0.0f};
+        // hand.rr = new float[3]{0.0f, 0.0f, 0.0f};
         current_time = Time.time;
         image_u = GameObject.Find("panel_r").GetComponent<Image>();
         image_r = GameObject.Find("panel_u").GetComponent<Image>();
@@ -310,7 +265,7 @@ public class MainDataRecorderGripper : MonoBehaviour
     {
         // Attempt to show the render textures
         MainLoop();
-        if (OVRInput.GetUp(OVRInput.RawButton.X))
+        if (OVRInput.GetUp(OVRInput.RawButton.A))
         {
             startRecording = !startRecording;
             if (startRecording)
@@ -336,7 +291,7 @@ public class MainDataRecorderGripper : MonoBehaviour
                 image_l.color = new Color32(12, 188, 13, 100);
             }
         }
-        if(OVRInput.GetUp(OVRInput.RawButton.Y))
+        if(OVRInput.GetUp(OVRInput.RawButton.B))
         {
             if(traj_cnt > 0 && !deleted)
             {
@@ -352,15 +307,6 @@ public class MainDataRecorderGripper : MonoBehaviour
                 image_u.color = new Color32(12, 188, 13, 100);
                 image_l.color = new Color32(12, 188, 13, 100);
             }
-        }
-        if(OVRInput.GetUp(OVRInput.RawButton.A))
-        {
-            robot_vis.SetActive(!robot_vis.activeSelf);
-            gripper_vis.SetActive(!gripper_vis.activeSelf);
-            image_b.enabled = !image_b.enabled;
-            image_l.enabled = !image_l.enabled;
-            image_r.enabled = !image_r.enabled;
-            image_u.enabled = !image_u.enabled;
         }
         if (!startRecording)
         {
