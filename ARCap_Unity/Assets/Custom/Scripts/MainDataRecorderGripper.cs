@@ -182,8 +182,8 @@ public class MainDataRecorderGripper : MonoBehaviour
         // Load SelectWorldScene
         local_ip = StartScene.local_ip;
         cameraRig = GameObject.Find("OVRCameraRig").GetComponent<OVRCameraRig>();
-        l_hand = GetComponent<OVRHand>();
-        l_hand_skeleton = GetComponent<OVRSkeleton>();
+        l_hand = GameObject.Find("LeftControllerAnchor").GetComponent<OVRHand>();
+        l_hand_skeleton = GameObject.Find("LeftControllerAnchor").GetComponent<OVRSkeleton>();
         // Set depth map index 200 x 200, from 0 to 1 in x and y
         // for (int y = 0; y < 100; y++){
         //     for (int x = 0; x < 100; x++)

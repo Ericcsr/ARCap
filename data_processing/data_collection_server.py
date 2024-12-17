@@ -12,7 +12,7 @@ from quest_robot_module import QuestRightArmLeapModule, QuestLeftArmGripperNoRok
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--frequency", type=int, default=30)
-    parser.add_argument("--handedness", type=str, default="right")
+    parser.add_argument("--handedness", type=str, default="left")
     parser.add_argument("--no_camera", action="store_true", default=False)
     args = parser.parse_args()
     c = pb.connect(pb.DIRECT)
