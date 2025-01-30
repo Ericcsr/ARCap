@@ -1,5 +1,5 @@
 # ARCap: Collecting High-quality Human Demonstrations for Robot Learning with Augmented Reality Feedback
-## This is part of official implementation of ARCap: Collecting High-quality Human Demonstrations for Robot Learning with Augmented Reality Feedback
+## This is part of official implementation of ARCap: Collecting High-quality Human Demonstrations for Robot Learning with Augmented Reality Feedback (ICRA 2025)
 ## For training diffusion policy using collected dataset please checkout [link](https://github.com/j96w/DexCap/tree/arcap_policy)
 ## For more details please check our [website](https://stanford-tml.github.io/ARCap/) and [paper](https://arxiv.org/abs/2410.08464)
 
